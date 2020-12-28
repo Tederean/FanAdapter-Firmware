@@ -34,7 +34,7 @@ namespace Services
     void OnTickEvent(void *args)
     {
       float currentRPM = Services::FanRotation::GetCurrentRPM();
-      float targetPowerRatio = Services::PC::MeasureDutyCycle();
+      float targetDutyCycle = Services::PC::MeasureDutyCycle();
       float targetRPM = 1500.0f;
 
       uint8_t outputPower = PID.step(targetRPM, currentRPM);
@@ -44,7 +44,7 @@ namespace Services
       //Serial.print("RPM=");
       //Serial.print(currentRPM, 0);
       //Serial.print(" | PC=");
-      //Serial.print(targetPowerRatio *100.0f, 0);
+      //Serial.print(targetDutyCycle *100.0f, 0);
       //Serial.print("% | PWM=");
       //Serial.print(outputPower / 2.55f, 0);
       //Serial.print("%\n");

@@ -41,22 +41,26 @@ namespace Services
 
     float MeasureDutyCycle()
     {
-      float highTime_us;
-      float lowTime_us;
+      float highTime_us = 0.0f;
 
       ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
       {
         highTime_us = pulseIn(PC_PWM, HIGH, MeasurementTimeout);
       }
 
-      ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+      if (highTime_us > 0.0f)
       {
-        lowTime_us = pulseIn(PC_PWM, LOW, MeasurementTimeout);
-      }
+        float lowTime_us = 0.0f;
+        
+        ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+        {
+          lowTime_us = pulseIn(PC_PWM, LOW, MeasurementTimeout);
+        }
 
-      if (lowTime_us > 0.0f && highTime_us > 0.0f)
-      {
-        return highTime_us / (lowTime_us + highTime_us);
+        if (lowTime_us > 0.0f)
+        {
+          return highTime_us / (lowTime_us + highTime_us);
+        }
       }
 
       return 1.0f;
