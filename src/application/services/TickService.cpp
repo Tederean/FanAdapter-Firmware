@@ -4,7 +4,7 @@
 #include <application/services/FanRotationService.h>
 #include <application/services/PCService.h>
 #include <application/services/TickService.h>
-#include <application/utils/FastPID.h>
+#include <application/common/FanRegulator.h>
 
 using namespace std;
 
@@ -17,18 +17,16 @@ namespace Services
 
     void OnTickEvent(void *args);
 
-    uint8_t Step(uint8_t targetPower, uint8_t currentPower);
-
     const timespan_t TickInterval = 100UL * 1000UL;
 
     const float TickFrequency = 1000000.0f / TickInterval;
-
-    FastPID PID(0.0f, 0.1f, 0.0f, TickFrequency, 8);
 
     Event<void> TickEvent;
 
     void Initialize()
     {
+      FanRegulator::Initialize(TickFrequency);
+
       TickEvent.Subscribe(OnTickEvent);
       Services::System::InvokeLater(&TickEvent, TickInterval, true);
     }
@@ -39,7 +37,7 @@ namespace Services
       uint8_t targetPower = Services::PC::MeasureTargetPower();
 
       uint8_t currentPower = Services::FanPower::GetFanPower();
-      uint8_t outputPower = PID.Step(targetPower, currentPower);
+      uint8_t outputPower = FanRegulator::Step(targetPower, currentPower);
 
       Services::FanPower::SetFanPower(outputPower);
 

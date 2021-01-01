@@ -42,7 +42,7 @@ namespace Services
 
         if (lowTime_us > 0)
         {
-          uint32_t powerValue = (highTime_us * 255) / (lowTime_us + highTime_us);
+          uint32_t powerValue = (highTime_us * 0xFF) / (lowTime_us + highTime_us);
 
           return Math::Clamp<uint32_t>(powerValue, 0x00, 0xFF);
         }

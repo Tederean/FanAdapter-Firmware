@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include <framework/services/SystemService.h>
+#include <application/services/PCService.h>
 #include <application/services/FanPowerService.h>
 #include <application/services/FanRotationService.h>
-#include <application/services/PCService.h>
 #include <application/services/TickService.h>
 
 void loop()
@@ -17,6 +17,5 @@ void setup()
   Services::PC::Initialize();
   Services::FanPower::Initialize();
   Services::FanRotation::Initialize();
-  
   Services::Tick::Initialize();
 }
