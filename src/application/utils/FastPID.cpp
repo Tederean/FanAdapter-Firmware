@@ -5,21 +5,21 @@
 FastPID::~FastPID() {
 }
 
-void FastPID::clear() {
+void FastPID::Clear() {
   _last_sp = 0; 
   _last_out = 0;
   _sum = 0; 
   _last_err = 0;
 }
 
-bool FastPID::setCoefficients(float kp, float ki, float kd, float hz) {
-  _p = floatToParam(kp);
-  _i = floatToParam(ki / hz);
-  _d = floatToParam(kd * hz);
+bool FastPID::SetCoefficients(float kp, float ki, float kd, float hz) {
+  _p = FloatToParam(kp);
+  _i = FloatToParam(ki / hz);
+  _d = FloatToParam(kd * hz);
   return true;
 }
 
-bool FastPID::setOutputConfig(int bits, bool sign) {
+bool FastPID::SetOutputConfig(int bits, bool sign) {
   // Set output bits
   if (bits <= 16 && bits >= 1) {
     if (bits == 16) {
@@ -38,7 +38,7 @@ bool FastPID::setOutputConfig(int bits, bool sign) {
   return true;
 }
 
-bool FastPID::setOutputRange(int16_t min, int16_t max)
+bool FastPID::SetOutputRange(int16_t min, int16_t max)
 {
   if (min >= max) {
     return true;
@@ -48,14 +48,14 @@ bool FastPID::setOutputRange(int16_t min, int16_t max)
   return true;
 }
 
-bool FastPID::configure(float kp, float ki, float kd, float hz, int bits, bool sign) {
-  clear();
-  setCoefficients(kp, ki, kd, hz);
-  setOutputConfig(bits, sign);
+bool FastPID::Configure(float kp, float ki, float kd, float hz, int bits, bool sign) {
+  Clear();
+  SetCoefficients(kp, ki, kd, hz);
+  SetOutputConfig(bits, sign);
   return true; 
 }
 
-uint32_t FastPID::floatToParam(float in) {
+uint32_t FastPID::FloatToParam(float in) {
   if (in > PARAM_MAX || in < 0) {
     return 0;
   }
@@ -69,7 +69,7 @@ uint32_t FastPID::floatToParam(float in) {
   return param;
 }
 
-int16_t FastPID::step(int16_t sp, int16_t fb) {
+int16_t FastPID::Step(int16_t sp, int16_t fb) {
 
   // int16 + int16 = int17
   int32_t err = int32_t(sp) - int32_t(fb);

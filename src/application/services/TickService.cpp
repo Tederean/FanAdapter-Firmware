@@ -39,7 +39,7 @@ namespace Services
       uint8_t targetPower = Services::PC::MeasureTargetPower();
 
       uint8_t currentPower = Services::FanPower::GetFanPower();
-      uint8_t outputPower = PID.step(targetPower, currentPower);
+      uint8_t outputPower = PID.Step(targetPower, currentPower);
 
       Services::FanPower::SetFanPower(outputPower);
 

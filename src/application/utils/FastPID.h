@@ -21,28 +21,27 @@ class FastPID {
 public:
   FastPID() 
   {
-    clear();
+    Clear();
   }
 
   FastPID(float kp, float ki, float kd, float hz, int bits=16, bool sign=false)
   {
-    configure(kp, ki, kd, hz, bits, sign);
+    Configure(kp, ki, kd, hz, bits, sign);
   }
 
   ~FastPID();
 
-  bool setCoefficients(float kp, float ki, float kd, float hz);
-  bool setOutputConfig(int bits, bool sign);
-  bool setOutputRange(int16_t min, int16_t max);
-  void clear();
-  bool configure(float kp, float ki, float kd, float hz, int bits=16, bool sign=false);
-  int16_t step(int16_t sp, int16_t fb);
+  bool SetCoefficients(float kp, float ki, float kd, float hz);
+  bool SetOutputConfig(int bits, bool sign);
+  bool SetOutputRange(int16_t min, int16_t max);
+  void Clear();
+  bool Configure(float kp, float ki, float kd, float hz, int bits=16, bool sign=false);
+  int16_t Step(int16_t sp, int16_t fb);
 
 
 private:
 
-  uint32_t floatToParam(float); 
-  void setCfgErr(); 
+  uint32_t FloatToParam(float); 
 
 private:
 
