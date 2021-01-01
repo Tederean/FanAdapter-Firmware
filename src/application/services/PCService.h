@@ -13,7 +13,7 @@ namespace Services
 
     void Initialize();
 
-    float MeasureTargetPowerRatio();
+    uint8_t MeasureTargetPower();
 
   } // namespace PC
 } // namespace Services

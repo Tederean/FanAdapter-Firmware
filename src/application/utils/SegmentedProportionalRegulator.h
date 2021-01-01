@@ -10,10 +10,14 @@ class SegmentedProportionalRegulator
 
 private:
 
+  float CurrentPowerRatio;
 
 public:
 
-  
+  SegmentedProportionalRegulator();
+
+  float Step(float targetPowerRatio);
+
 };
 
 #endif

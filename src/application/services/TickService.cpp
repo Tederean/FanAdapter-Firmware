@@ -17,15 +17,15 @@ namespace Services
 
     void OnTickEvent(void *args);
 
-    float PowerRatioToRPM(float ratio);
-
-    float GetFanPowerRatio(float targetPowerRatio);
+    uint16_t PowerToRPM(uint8_t power);
 
     const timespan_t TickInterval = 100UL * 1000UL;
 
-    const float Kp = 0.4f, Ki = 0.4f, Kd = 0.05f;
+    const float TickFrequency = 1000000.0f / TickInterval;
 
-    FastPID PID(Kp, Ki, Kd, (1000000.0f / TickInterval), 8);
+    FastPID PID(0.4f, 0.4f, 0.05f, TickFrequency, 8);
+
+    FastPID PReg(0.0f, 0.0f, 0.0f, TickFrequency, 8);
 
     Event<void> TickEvent;
 
@@ -37,42 +37,35 @@ namespace Services
 
     void OnTickEvent(void *args)
     {
-      float currentRPM = Services::FanRotation::MeasureRPM();
-      float targetPowerRatio = Services::PC::MeasureTargetPowerRatio();
+      uint16_t currentRPM = Services::FanRotation::MeasureRPM();
+      uint8_t targetPower = Services::PC::MeasureTargetPower();
 
-      float fanPowerRatio = GetFanPowerRatio(targetPowerRatio);
-      float targetRPM = PowerRatioToRPM(fanPowerRatio);
+      uint8_t fanPower = targetPower; // PReg.step(178, targetPower);
+      uint16_t targetRPM = PowerToRPM(fanPower);
 
       uint8_t outputPower = PID.step(targetRPM, currentRPM);
       Services::FanPower::SetFanPower(outputPower);
 
+
+#ifdef SERIAL_DEBUG
       Serial.print("RPM=");
-      Serial.print(currentRPM, 0);
+      Serial.print(currentRPM);
       Serial.print(" | PC=");
-      Serial.print(targetPowerRatio *100.0f, 0);
-      Serial.print("% | PWM=");
+      Serial.print(targetPower / 2.55f, 0);
+      Serial.print("% | TRPM=");
+      Serial.print(targetRPM);
+      Serial.print(" | PWM=");
       Serial.print(outputPower / 2.55f, 0);
       Serial.print("%\n");
+#endif
+
     }
 
-    float GetFanPowerRatio(float targetPowerRatio)
+    uint16_t PowerToRPM(uint8_t power)
     {
-      //  0% - 30% => Zero RPM
-      // 31% - 50% => Slow proportional controller
-      // Wait 2 Minutes
-      // 51% - 70% => Slow proportional controller
+      float ratio = power / 255.0f;
 
-      if (targetPowerRatio <= 0.3f)
-      {
-        return 0.0f;
-      }
-
-      return targetPowerRatio;
-    }
-
-    float PowerRatioToRPM(float ratio)
-    {
-      return ratio * 1500.0f;
+      return ratio * 1500;
     }
 
   } // namespace Tick

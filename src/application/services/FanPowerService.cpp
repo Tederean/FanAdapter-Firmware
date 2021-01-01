@@ -37,8 +37,16 @@ namespace Services
     {
       CurrentFanPower = power;
 
-      digitalWrite(FAN_VCC, power > 0);
-      analogWrite(FAN_PWM, power);
+      if (power > 75) // >= 30%
+      {
+        digitalWrite(FAN_VCC, HIGH);
+        analogWrite(FAN_PWM, power);
+      }
+      else
+      {
+        digitalWrite(FAN_VCC, LOW);
+        digitalWrite(FAN_PWM, LOW);
+      }
     }
 
   } // namespace FanPower

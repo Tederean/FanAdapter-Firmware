@@ -34,6 +34,21 @@
     "streambuf": "cpp",
     "string": "cpp",
     "string_iostream": "cpp",
-    "utility": "cpp"
+    "utility": "cpp",
+    "associative_base": "cpp",
+    "bitset": "cpp",
+    "cmath": "cpp",
+    "complex": "cpp",
+    "cstring": "cpp",
+    "iomanip": "cpp",
+    "limits": "cpp",
+    "list": "cpp",
+    "map": "cpp",
+    "numeric": "cpp",
+    "set": "cpp",
+    "sstream": "cpp",
+    "stack": "cpp",
+    "typeinfo": "cpp",
+    "valarray": "cpp"
   }
 }

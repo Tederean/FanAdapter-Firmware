@@ -2,6 +2,7 @@
 #include <util/atomic.h>
 #include <application/services/PCService.h>
 #include <framework/services/SystemService.h>
+#include <framework/utils/Math.h>
 
 using namespace std;
 
@@ -12,7 +13,7 @@ namespace Services
 
     void Initialize();
 
-    float MeasureTargetPowerRatio();
+    uint8_t MeasureTargetPower();
 
     const uint32_t MeasurementTimeout = 200UL;
 
@@ -21,31 +22,33 @@ namespace Services
       pinMode(PC_PWM, INPUT);
     }
 
-    float MeasureTargetPowerRatio()
+    uint8_t MeasureTargetPower()
     {
-      float highTime_us = 0.0f;
+      uint32_t highTime_us = 0;
 
       ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
       {
         highTime_us = pulseIn(PC_PWM, HIGH, MeasurementTimeout);
       }
 
-      if (highTime_us > 0.0f)
+      if (highTime_us > 0)
       {
-        float lowTime_us = 0.0f;
+        uint32_t lowTime_us = 0;
         
         ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
         {
           lowTime_us = pulseIn(PC_PWM, LOW, MeasurementTimeout);
         }
 
-        if (lowTime_us > 0.0f)
+        if (lowTime_us > 0)
         {
-          return highTime_us / (lowTime_us + highTime_us);
+          uint32_t powerValue = (highTime_us * 255) / (lowTime_us + highTime_us);
+
+          return Math::Clamp<uint32_t>(powerValue, 0x00, 0xFF);
         }
       }
 
-      return digitalRead(PC_PWM) == HIGH ? 1.0f : 0.0f;
+      return digitalRead(PC_PWM) == HIGH ? 0xFF : 0x00;
     }
 
   } // namespace PC
