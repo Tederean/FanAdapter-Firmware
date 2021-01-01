@@ -4,7 +4,7 @@
 #include <application/services/FanRotationService.h>
 #include <application/services/PCService.h>
 #include <application/services/TickService.h>
-#include <FastPID.h>
+#include <application/utils/FastPID.h>
 
 using namespace std;
 
@@ -17,15 +17,13 @@ namespace Services
 
     void OnTickEvent(void *args);
 
-    uint16_t PowerToRPM(uint8_t power);
+    uint8_t Step(uint8_t targetPower, uint8_t currentPower);
 
     const timespan_t TickInterval = 100UL * 1000UL;
 
     const float TickFrequency = 1000000.0f / TickInterval;
 
-    FastPID PID(0.4f, 0.4f, 0.05f, TickFrequency, 8);
-
-    FastPID PReg(0.0f, 0.0f, 0.0f, TickFrequency, 8);
+    FastPID PID(0.0f, 0.1f, 0.0f, TickFrequency, 8);
 
     Event<void> TickEvent;
 
@@ -40,32 +38,26 @@ namespace Services
       uint16_t currentRPM = Services::FanRotation::MeasureRPM();
       uint8_t targetPower = Services::PC::MeasureTargetPower();
 
-      uint8_t fanPower = targetPower; // PReg.step(178, targetPower);
-      uint16_t targetRPM = PowerToRPM(fanPower);
+      uint8_t currentPower = Services::FanPower::GetFanPower();
+      uint8_t outputPower = PID.step(targetPower, currentPower);
 
-      uint8_t outputPower = PID.step(targetRPM, currentRPM);
       Services::FanPower::SetFanPower(outputPower);
 
 
-#ifdef SERIAL_DEBUG
-      Serial.print("RPM=");
-      Serial.print(currentRPM);
-      Serial.print(" | PC=");
-      Serial.print(targetPower / 2.55f, 0);
-      Serial.print("% | TRPM=");
-      Serial.print(targetRPM);
-      Serial.print(" | PWM=");
-      Serial.print(outputPower / 2.55f, 0);
-      Serial.print("%\n");
-#endif
+      Debug("RPM=");
+      Debug(currentRPM);
 
-    }
+      Debug(" | ");
 
-    uint16_t PowerToRPM(uint8_t power)
-    {
-      float ratio = power / 255.0f;
+      Debug("target=");
+      Debug(targetPower);
 
-      return ratio * 1500;
+      Debug(" | ");
+
+      Debug("output=");
+      Debug(outputPower);
+
+      Debug("\n");
     }
 
   } // namespace Tick
