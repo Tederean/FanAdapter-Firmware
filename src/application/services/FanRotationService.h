@@ -13,7 +13,7 @@ namespace Services
 
     void Initialize();
 
-    float GetCurrentRPM();
+    float MeasureRPM();
 
   } // namespace FanRotation
 } // namespace Services

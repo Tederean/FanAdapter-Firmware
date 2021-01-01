@@ -14,7 +14,7 @@ namespace Services
 
     void OnEnableInterrupt(void *args);
 
-    float GetCurrentRPM();
+    float MeasureRPM();
 
     void OnRisingEdgeInterrupt();
 
@@ -39,7 +39,7 @@ namespace Services
       attachInterrupt(digitalPinToInterrupt(FAN_RPM), OnRisingEdgeInterrupt, RISING);
     }
 
-    float GetCurrentRPM()
+    float MeasureRPM()
     {
       timespan_t copyOfCurrentEdge;
       timespan_t copyOfLastEdge;

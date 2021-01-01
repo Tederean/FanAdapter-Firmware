@@ -12,34 +12,16 @@ namespace Services
 
     void Initialize();
 
-    //void OnTimeToMeasure(void *args);
-
-    float MeasureDutyCycle();
-
-    //const timespan_t MeasurementInterval = 250UL * 1000UL;
+    float MeasureTargetPowerRatio();
 
     const uint32_t MeasurementTimeout = 200UL;
-
-    //Event<float> ControlValueMeasuredEvent;
-
-    //Event<void> TimeToMeasureEvent;
 
     void Initialize()
     {
       pinMode(PC_PWM, INPUT);
-
-      //TimeToMeasureEvent.Subscribe(OnTimeToMeasure);
-      //Services::System::InvokeLater(&TimeToMeasureEvent, MeasurementInterval, true);
     }
 
-    //void OnTimeToMeasure(void *args)
-    //{
-    //  float dutyCycle = MeasureDutyCycle();
-    //
-    //  ControlValueMeasuredEvent.Invoke(&dutyCycle);
-    //}
-
-    float MeasureDutyCycle()
+    float MeasureTargetPowerRatio()
     {
       float highTime_us = 0.0f;
 
@@ -63,7 +45,7 @@ namespace Services
         }
       }
 
-      return 1.0f;
+      return digitalRead(PC_PWM) == HIGH ? 1.0f : 0.0f;
     }
 
   } // namespace PC

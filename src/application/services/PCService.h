@@ -13,9 +13,7 @@ namespace Services
 
     void Initialize();
 
-    float MeasureDutyCycle();
-    
-    //extern Event<float> ControlValueMeasuredEvent;
+    float MeasureTargetPowerRatio();
 
   } // namespace PC
 } // namespace Services
