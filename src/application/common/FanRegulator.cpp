@@ -1,25 +1,20 @@
 #include <Arduino.h>
+#include <framework/services/SystemService.h>
 #include <application/common/FanRegulator.h>
 #include <application/common/FastPID.h>
 
 using namespace std;
 
-namespace FanRegulator
+FanRegulator::FanRegulator(float proportionalValue, float integralValue, float differentialValue, float tickFrequency, uint8_t minValue, uint8_t maxValue, Restpoint *risingRestpoints, Restpoint *fallingRestpoints)
 {
+  PID = new FastPID(proportionalValue, integralValue, differentialValue, tickFrequency, 8);
+  PID->SetOutputRange(minValue, maxValue);
 
-  void Initialize(float tickFrequency);
+  RisingRestpoints = risingRestpoints;
+  FallingRestpoints = fallingRestpoints;
+}
 
-  uint8_t Step(uint8_t targetPower, uint8_t currentPower);
-
-  //FastPID PID(0.0f, 0.1f, 0.0f, TickFrequency, 8);
-
-  void Initialize(float tickFrequency)
-  {
-  }
-
-  uint8_t Step(uint8_t targetPower, uint8_t currentPower)
-  {
-    return targetPower;
-  }
-
-} // namespace FanRegulator
+uint8_t FanRegulator::Step(uint8_t targetPower, uint8_t currentPower)
+{
+  return targetPower;
+}
