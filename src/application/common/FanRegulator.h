@@ -19,11 +19,15 @@ class FanRegulator
 
 private:
 
-  FastPID *PID;
+  FastPID PID;
 
   Restpoint *RisingRestpoints;
 
   Restpoint *FallingRestpoints;
+
+  void ResetRemainingTime(Restpoint *restpoint);
+
+  void ResetAllRemainingTimes(Restpoint *restpoint);
 
 public:
 
