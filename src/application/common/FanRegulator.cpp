@@ -16,16 +16,17 @@ FanRegulator::FanRegulator(float proportionalValue, float integralValue, float d
   LastOutputValue = 0;
 
   HasCurrentRestpoint = false;
+  LastElapedRestpointValue = 0;
 }
 
-Restpoint FanRegulator::FindNextRestpoint(uint8_t value, ValueChange direction)
+Restpoint FanRegulator::FindNextRestpoint(uint8_t value, ValueChange direction, vector<Restpoint> *restpoints, uint8_t lastElapedRestpointValue)
 {
   Restpoint fallback = { 255, 0, direction };
   
   {
     uint16_t fallbackDifference = 255;
 
-    for (auto restpoint : *AvailableRestpoints)
+    for (auto restpoint : *restpoints)
     {
       if (restpoint.Direction != direction)
         continue;
@@ -34,7 +35,7 @@ Restpoint FanRegulator::FindNextRestpoint(uint8_t value, ValueChange direction)
       {
         uint8_t difference = abs(restpoint.Target - value);
 
-        if (difference < fallbackDifference)
+        if (difference < fallbackDifference && restpoint.Target != lastElapedRestpointValue)
         {
           fallback = restpoint;
           fallbackDifference = difference;
@@ -61,13 +62,6 @@ ValueChange FanRegulator::GetDirection(uint8_t oldValue, uint8_t newValue)
   return ValueChange::Stay;
 }
 
-
-
-
-
-
-
-
 uint8_t FanRegulator::Step(uint8_t targetValue, uint8_t currentValue)
 {
   uint8_t outputValue = PID.Step(targetValue, currentValue);
@@ -76,7 +70,7 @@ uint8_t FanRegulator::Step(uint8_t targetValue, uint8_t currentValue)
   if (!HasCurrentRestpoint)
   {
     auto direction = GetDirection(LastOutputValue, outputValue);
-    auto nextRestpoint = FindNextRestpoint(LastOutputValue, direction);
+    auto nextRestpoint = FindNextRestpoint(LastOutputValue, direction, AvailableRestpoints, LastElapedRestpointValue);
 
     if (nextRestpoint.PausedTicks > 0 && outputValue >= nextRestpoint.Target)
     {
@@ -93,17 +87,17 @@ uint8_t FanRegulator::Step(uint8_t targetValue, uint8_t currentValue)
 
   if (HasCurrentRestpoint)
   {
-    outputValue == CurrentRestpoint.Target;
+    outputValue = CurrentRestpoint.Target;
     TickCounter--;
+
     PID.Clear();
 
     if (TickCounter == 0)
     {
-
+      LastElapedRestpointValue = CurrentRestpoint.Target;
+      HasCurrentRestpoint = false;
     }
   }
-
-
 
 
   LastOutputValue = outputValue;

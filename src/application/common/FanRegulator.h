@@ -39,10 +39,12 @@ private:
 
   bool HasCurrentRestpoint;
 
+  uint8_t LastElapedRestpointValue;
+
   Restpoint CurrentRestpoint;
 
 
-  Restpoint FindNextRestpoint(uint8_t value, ValueChange direction);
+  Restpoint FindNextRestpoint(uint8_t value, ValueChange direction, vector<Restpoint> *restpoints, uint8_t lastElapedRestpointValue);
 
   ValueChange GetDirection(uint8_t oldValue, uint8_t newValue);
 
