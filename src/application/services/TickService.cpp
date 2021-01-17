@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <vector>
 #include <framework/services/SystemService.h>
 #include <application/services/FanPowerService.h>
 #include <application/services/FanRotationService.h>
@@ -21,21 +22,18 @@ namespace Services
 
     const float TickFrequency = 1000000.0f / TickInterval;
 
-    Restpoint RisingRestpoints[3] =
+    vector<Restpoint> Restpoints =
     {
-      { 10, 3000000 },
-      { 100, 3000000 },
-      { 200, 3000000 },
+      { 10, 3000000/TickInterval, ValueChange::Rising },
+      { 100, 3000000/TickInterval, ValueChange::Rising },
+      { 200, 3000000/TickInterval, ValueChange::Rising },
+
+      { 10, 3000000/TickInterval, ValueChange::Falling },
+      { 100, 3000000/TickInterval, ValueChange::Falling },
+      { 200, 3000000/TickInterval, ValueChange::Falling },
     };
 
-    Restpoint FallingRestpoints[3] =
-    {
-      { 10, 3000000 },
-      { 100, 3000000 },
-      { 200, 3000000 },
-    };
-
-    FanRegulator Regulator(0.0f, 0.1f, 0.0f, TickFrequency, 0, 255, RisingRestpoints, FallingRestpoints);
+    FanRegulator Regulator(0.0f, 0.1f, 0.0f, TickFrequency, 0, 255, &Restpoints);
 
     Event<void> TickEvent;
 

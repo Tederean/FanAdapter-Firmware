@@ -5,35 +5,107 @@
 
 using namespace std;
 
-void FanRegulator::ResetRemainingTime(Restpoint *restpoint)
-{
-  restpoint->RemainingTime = restpoint->Restperiod;
-}
-
-void FanRegulator::ResetAllRemainingTimes(Restpoint *restpoint)
-{
-  uint32_t structLength = sizeof(Restpoint);
-  uint8_t arrayLength = sizeof(restpoint) / structLength;
-  
-  for (uint8_t counter = 0; counter < arrayLength; counter++)
-  {
-    ResetRemainingTime(restpoint + (counter * structLength));
-  }
-}
-
-FanRegulator::FanRegulator(float proportionalValue, float integralValue, float differentialValue, float tickFrequency, uint8_t minValue, uint8_t maxValue, Restpoint *risingRestpoints, Restpoint *fallingRestpoints)
+FanRegulator::FanRegulator(float proportionalValue, float integralValue, float differentialValue, float tickFrequency, uint8_t minValue, uint8_t maxValue, vector<Restpoint> *restpoints)
 {
   PID = FastPID(proportionalValue, integralValue, differentialValue, tickFrequency, 8);
   PID.SetOutputRange(minValue, maxValue);
 
-  ResetAllRemainingTimes(risingRestpoints);
-  ResetAllRemainingTimes(fallingRestpoints);
-  
-  RisingRestpoints = risingRestpoints;
-  FallingRestpoints = fallingRestpoints;
+  AvailableRestpoints = restpoints;
+
+  TickCounter = 0;
+  LastOutputValue = 0;
+
+  HasCurrentRestpoint = false;
 }
 
-uint8_t FanRegulator::Step(uint8_t targetPower, uint8_t currentPower)
+Restpoint FanRegulator::FindNextRestpoint(uint8_t value, ValueChange direction)
 {
-  return targetPower;
+  Restpoint fallback = { 255, 0, direction };
+  
+  {
+    uint16_t fallbackDifference = 255;
+
+    for (auto restpoint : *AvailableRestpoints)
+    {
+      if (restpoint.Direction != direction)
+        continue;
+
+      if ((direction == ValueChange::Rising && restpoint.Target > value) || (direction == ValueChange::Falling && restpoint.Target < value))
+      {
+        uint8_t difference = abs(restpoint.Target - value);
+
+        if (difference < fallbackDifference)
+        {
+          fallback = restpoint;
+          fallbackDifference = difference;
+        }
+      }
+    }
+  }
+
+  return fallback;
+}
+
+ValueChange FanRegulator::GetDirection(uint8_t oldValue, uint8_t newValue)
+{
+  if (newValue > oldValue)
+  {
+    return ValueChange::Rising;
+  }
+
+  if (newValue < oldValue)
+  {
+    return ValueChange::Falling;
+  }
+  
+  return ValueChange::Stay;
+}
+
+
+
+
+
+
+
+
+uint8_t FanRegulator::Step(uint8_t targetValue, uint8_t currentValue)
+{
+  uint8_t outputValue = PID.Step(targetValue, currentValue);
+
+
+  if (!HasCurrentRestpoint)
+  {
+    auto direction = GetDirection(LastOutputValue, outputValue);
+    auto nextRestpoint = FindNextRestpoint(LastOutputValue, direction);
+
+    if (nextRestpoint.PausedTicks > 0 && outputValue >= nextRestpoint.Target)
+    {
+      HasCurrentRestpoint = true;
+      CurrentRestpoint = nextRestpoint;
+
+      TickCounter = nextRestpoint.PausedTicks;
+      LastOutputValue = nextRestpoint.Target;
+
+      return nextRestpoint.Target;
+    }
+  }
+
+
+  if (HasCurrentRestpoint)
+  {
+    outputValue == CurrentRestpoint.Target;
+    TickCounter--;
+    PID.Clear();
+
+    if (TickCounter == 0)
+    {
+
+    }
+  }
+
+
+
+
+  LastOutputValue = outputValue;
+  return outputValue;
 }
