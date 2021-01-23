@@ -46,6 +46,8 @@ private:
 
   bool HasCurrentRestpoint();
 
+  bool FanRegulator::DirectionChanged(uint8_t LastOutputValue, uint8_t nextOutputValue, Restpoint *activeRestpoint);
+
 public:
 
   FanRegulator(float proportionalValue, float integralValue, float differentialValue, float tickFrequency, uint8_t minValue, uint8_t maxValue, vector<Restpoint> *restpoints);
