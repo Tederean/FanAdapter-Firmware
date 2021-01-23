@@ -36,7 +36,7 @@ public:
   bool SetOutputRange(int16_t min, int16_t max);
   void Clear();
   bool Configure(float kp, float ki, float kd, float hz, int bits=16, bool sign=false);
-  int16_t Step(int16_t sp, int16_t fb);
+  int16_t Step(int16_t setpoint, int16_t feedback);
 
 
 private:
@@ -46,13 +46,13 @@ private:
 private:
 
   // Configuration
-  uint32_t _p, _i, _d;
-  int64_t _outmax, _outmin; 
+  uint32_t ProportionalValue, IntegralValue, DifferentialValue;
+  int64_t Outmax, Outmin; 
   
   // State
-  int16_t _last_sp, _last_out;
-  int64_t _sum;
-  int32_t _last_err;
+  int16_t LastSetpoint, LastOut;
+  int64_t Sum;
+  int32_t LastError;
 };
 
 #endif

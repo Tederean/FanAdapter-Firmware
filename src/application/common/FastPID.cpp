@@ -6,16 +6,16 @@ FastPID::~FastPID() {
 }
 
 void FastPID::Clear() {
-  _last_sp = 0; 
-  _last_out = 0;
-  _sum = 0; 
-  _last_err = 0;
+  LastSetpoint = 0; 
+  LastOut = 0;
+  Sum = 0; 
+  LastError = 0;
 }
 
 bool FastPID::SetCoefficients(float kp, float ki, float kd, float hz) {
-  _p = FloatToParam(kp);
-  _i = FloatToParam(ki / hz);
-  _d = FloatToParam(kd * hz);
+  ProportionalValue = FloatToParam(kp);
+  IntegralValue = FloatToParam(ki / hz);
+  DifferentialValue = FloatToParam(kd * hz);
   return true;
 }
 
@@ -23,16 +23,16 @@ bool FastPID::SetOutputConfig(int bits, bool sign) {
   // Set output bits
   if (bits <= 16 && bits >= 1) {
     if (bits == 16) {
-      _outmax = (0xFFFFULL >> (17 - bits)) * PARAM_MULT;
+      Outmax = (0xFFFFULL >> (17 - bits)) * PARAM_MULT;
     }
     else{
-      _outmax = (0xFFFFULL >> (16 - bits)) * PARAM_MULT;
+      Outmax = (0xFFFFULL >> (16 - bits)) * PARAM_MULT;
     }
     if (sign) {
-      _outmin = -((0xFFFFULL >> (17 - bits)) + 1) * PARAM_MULT;
+      Outmin = -((0xFFFFULL >> (17 - bits)) + 1) * PARAM_MULT;
     }
     else {
-      _outmin = 0;
+      Outmin = 0;
     }
   }
   return true;
@@ -43,8 +43,8 @@ bool FastPID::SetOutputRange(int16_t min, int16_t max)
   if (min >= max) {
     return true;
   }
-  _outmin = int64_t(min) * PARAM_MULT;
-  _outmax = int64_t(max) * PARAM_MULT;
+  Outmin = int64_t(min) * PARAM_MULT;
+  Outmax = int64_t(max) * PARAM_MULT;
   return true;
 }
 
@@ -69,37 +69,37 @@ uint32_t FastPID::FloatToParam(float in) {
   return param;
 }
 
-int16_t FastPID::Step(int16_t sp, int16_t fb) {
+int16_t FastPID::Step(int16_t setpoint, int16_t feedback) {
 
   // int16 + int16 = int17
-  int32_t err = int32_t(sp) - int32_t(fb);
+  int32_t err = int32_t(setpoint) - int32_t(feedback);
   int32_t P = 0, I = 0;
   int32_t D = 0;
 
-  if (_p) {
+  if (ProportionalValue) {
     // uint16 * int16 = int32
-    P = int32_t(_p) * int32_t(err);
+    P = int32_t(ProportionalValue) * int32_t(err);
   }
 
-  if (_i) {
+  if (IntegralValue) {
     // int17 * int16 = int33
-    _sum += int64_t(err) * int64_t(_i);
+    Sum += int64_t(err) * int64_t(IntegralValue);
 
     // Limit sum to 32-bit signed value so that it saturates, never overflows.
-    if (_sum > INTEG_MAX)
-      _sum = INTEG_MAX;
-    else if (_sum < INTEG_MIN)
-      _sum = INTEG_MIN;
+    if (Sum > INTEG_MAX)
+      Sum = INTEG_MAX;
+    else if (Sum < INTEG_MIN)
+      Sum = INTEG_MIN;
 
     // int32
-    I = _sum;
+    I = Sum;
   }
 
-  if (_d) {
+  if (DifferentialValue) {
     // (int17 - int16) - (int16 - int16) = int19
-    int32_t deriv = (err - _last_err) - int32_t(sp - _last_sp);
-    _last_sp = sp; 
-    _last_err = err; 
+    int32_t deriv = (err - LastError) - int32_t(setpoint - LastSetpoint);
+    LastSetpoint = setpoint; 
+    LastError = err; 
 
     // Limit the derivative to 16-bit signed value.
     if (deriv > DERIV_MAX)
@@ -108,17 +108,17 @@ int16_t FastPID::Step(int16_t sp, int16_t fb) {
       deriv = DERIV_MIN;
 
     // int16 * int16 = int32
-    D = int32_t(_d) * int32_t(deriv);
+    D = int32_t(DifferentialValue) * int32_t(deriv);
   }
 
   // int32 (P) + int32 (I) + int32 (D) = int34
   int64_t out = int64_t(P) + int64_t(I) + int64_t(D);
 
   // Make the output saturate
-  if (out > _outmax) 
-    out = _outmax;
-  else if (out < _outmin) 
-    out = _outmin;
+  if (out > Outmax) 
+    out = Outmax;
+  else if (out < Outmin) 
+    out = Outmin;
 
   // Remove the integer scaling factor. 
   int16_t rval = out >> PARAM_SHIFT;

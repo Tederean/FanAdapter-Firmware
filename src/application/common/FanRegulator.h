@@ -46,7 +46,7 @@ private:
 
   bool HasCurrentRestpoint();
 
-  bool FanRegulator::DirectionChanged(uint8_t LastOutputValue, uint8_t nextOutputValue, Restpoint *activeRestpoint);
+  bool DirectionChanged(uint8_t LastOutputValue, uint8_t nextOutputValue, Restpoint *activeRestpoint);
 
 public:
 
