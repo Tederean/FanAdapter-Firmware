@@ -15,66 +15,100 @@ FanRegulator::FanRegulator(float proportionalValue, float integralValue, float d
   TickCounter = 0;
   LastOutputValue = 0;
 
-  HasCurrentRestpoint = false;
-  LastElapedRestpointValue = 0;
+  CurrentRestpoint.PausedTicks = 0;
 }
 
-Restpoint FanRegulator::FindNextRestpoint(uint8_t value, ValueChange direction, vector<Restpoint> *restpoints, uint8_t lastElapedRestpointValue)
+bool FanRegulator::TryFindNextRisingRestpoint(uint8_t lastOutputValue, uint8_t nextOutputValue, vector<Restpoint> *restpoints, Restpoint *foundRestpoint)
 {
-  Restpoint fallback = { 255, 0, direction };
-  
+  foundRestpoint->PausedTicks = 0;
+  foundRestpoint->Direction = ValueChange::Rising;
+  foundRestpoint->Target = 0;
+
   {
-    uint16_t fallbackDifference = 255;
+    uint16_t nextDifference = 255;
 
     for (auto restpoint : *restpoints)
     {
-      if (restpoint.Direction != direction)
+      if (restpoint.Direction != ValueChange::Rising)
         continue;
 
-      if ((direction == ValueChange::Rising && restpoint.Target > value) || (direction == ValueChange::Falling && restpoint.Target < value))
+      if (restpoint.Target > lastOutputValue && restpoint.Target <= nextOutputValue)
       {
-        uint8_t difference = abs(restpoint.Target - value);
+        uint8_t difference = restpoint.Target - lastOutputValue;
 
-        if (difference < fallbackDifference && restpoint.Target != lastElapedRestpointValue)
+        if (difference < nextDifference)
         {
-          fallback = restpoint;
-          fallbackDifference = difference;
+          memcpy(&restpoint, foundRestpoint, sizeof(Restpoint));
+          nextDifference = difference;
         }
       }
     }
   }
 
-  return fallback;
+  return foundRestpoint->PausedTicks > 0;
 }
 
-ValueChange FanRegulator::GetDirection(uint8_t oldValue, uint8_t newValue)
+bool FanRegulator::TryFindNextFallingRestpoint(uint8_t lastOutputValue, uint8_t nextOutputValue, vector<Restpoint> *restpoints, Restpoint *foundRestpoint)
 {
-  if (newValue > oldValue)
+  foundRestpoint->PausedTicks = 0;
+  foundRestpoint->Direction = ValueChange::Falling;
+  foundRestpoint->Target = 255;
+
   {
-    return ValueChange::Rising;
+    uint16_t nextDifference = 255;
+
+    for (auto restpoint : *restpoints)
+    {
+      if (restpoint.Direction != ValueChange::Falling)
+        continue;
+
+      if (restpoint.Target < lastOutputValue && restpoint.Target >= nextOutputValue)
+      {
+        uint8_t difference = lastOutputValue - restpoint.Target;
+
+        if (difference < nextDifference)
+        {
+          memcpy(&restpoint, foundRestpoint, sizeof(Restpoint));
+          nextDifference = difference;
+        }
+      }
+    }
   }
 
-  if (newValue < oldValue)
+  return foundRestpoint->PausedTicks > 0;
+}
+
+bool FanRegulator::TryFindNextRestpoint(uint8_t lastOutputValue, uint8_t nextOutputValue, vector<Restpoint> *restpoints, Restpoint *foundRestpoint)
+{
+  if (lastOutputValue == nextOutputValue)
+    return false;
+
+  if (nextOutputValue > lastOutputValue)
   {
-    return ValueChange::Falling;
+    return TryFindNextRisingRestpoint(lastOutputValue, nextOutputValue, restpoints, foundRestpoint);
   }
-  
-  return ValueChange::Stay;
+  else
+  {
+    return TryFindNextFallingRestpoint(lastOutputValue, nextOutputValue, restpoints, foundRestpoint);
+  }
+}
+
+bool FanRegulator::HasCurrentRestpoint()
+{
+  return CurrentRestpoint.PausedTicks > 0;
 }
 
 uint8_t FanRegulator::Step(uint8_t targetValue, uint8_t currentValue)
 {
-  uint8_t outputValue = PID.Step(targetValue, currentValue);
+  uint8_t nextOutputValue = PID.Step(targetValue, currentValue);
 
 
-  if (!HasCurrentRestpoint)
+  if (!HasCurrentRestpoint())
   {
-    auto direction = GetDirection(LastOutputValue, outputValue);
-    auto nextRestpoint = FindNextRestpoint(LastOutputValue, direction, AvailableRestpoints, LastElapedRestpointValue);
+    Restpoint nextRestpoint;
 
-    if (nextRestpoint.PausedTicks > 0 && outputValue >= nextRestpoint.Target)
+    if (TryFindNextRestpoint(LastOutputValue, nextOutputValue, AvailableRestpoints, &nextRestpoint))
     {
-      HasCurrentRestpoint = true;
       CurrentRestpoint = nextRestpoint;
 
       TickCounter = nextRestpoint.PausedTicks;
@@ -85,21 +119,28 @@ uint8_t FanRegulator::Step(uint8_t targetValue, uint8_t currentValue)
   }
 
 
-  if (HasCurrentRestpoint)
+  if (HasCurrentRestpoint())
   {
-    outputValue = CurrentRestpoint.Target;
+    nextOutputValue = CurrentRestpoint.Target;
     TickCounter--;
-
     PID.Clear();
 
     if (TickCounter == 0)
     {
-      LastElapedRestpointValue = CurrentRestpoint.Target;
-      HasCurrentRestpoint = false;
+      CurrentRestpoint.PausedTicks = 0;
+
+      if (CurrentRestpoint.Direction == ValueChange::Rising && nextOutputValue < 255)
+      {
+        nextOutputValue++;
+      }
+      else if (CurrentRestpoint.Direction == ValueChange::Falling && nextOutputValue > 0)
+      {
+        nextOutputValue--;
+      }
     }
   }
 
 
-  LastOutputValue = outputValue;
-  return outputValue;
+  LastOutputValue = nextOutputValue;
+  return nextOutputValue;
 }

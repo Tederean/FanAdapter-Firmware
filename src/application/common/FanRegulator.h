@@ -10,7 +10,6 @@ using namespace std;
 
 enum class ValueChange
 {
-  Stay,
   Rising,
   Falling,
 };
@@ -31,22 +30,21 @@ private:
 
   vector<Restpoint> *AvailableRestpoints;
 
+  Restpoint CurrentRestpoint;
+
 
   uint16_t TickCounter;
 
   uint8_t LastOutputValue;
 
+  
+  bool TryFindNextRisingRestpoint(uint8_t lastOutputValue, uint8_t nextOutputValue, vector<Restpoint> *restpoints, Restpoint *foundRestpoint);
 
-  bool HasCurrentRestpoint;
+  bool TryFindNextFallingRestpoint(uint8_t lastOutputValue, uint8_t nextOutputValue, vector<Restpoint> *restpoints, Restpoint *foundRestpoint);
 
-  uint8_t LastElapedRestpointValue;
+  bool TryFindNextRestpoint(uint8_t lastOutputValue, uint8_t nextOutputValue, vector<Restpoint> *restpoints, Restpoint *foundRestpoint);
 
-  Restpoint CurrentRestpoint;
-
-
-  Restpoint FindNextRestpoint(uint8_t value, ValueChange direction, vector<Restpoint> *restpoints, uint8_t lastElapedRestpointValue);
-
-  ValueChange GetDirection(uint8_t oldValue, uint8_t newValue);
+  bool HasCurrentRestpoint();
 
 public:
 
