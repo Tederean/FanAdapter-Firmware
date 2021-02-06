@@ -46,7 +46,9 @@ private:
 
   bool HasCurrentRestpoint();
 
-  bool DirectionChanged(uint8_t LastOutputValue, uint8_t nextOutputValue, Restpoint *activeRestpoint);
+  void DeleteCurrentRestpoint();
+
+  bool DirectionChanged(uint8_t lastOutputValue, uint8_t nextOutputValue, Restpoint *activeRestpoint);
 
 public:
 

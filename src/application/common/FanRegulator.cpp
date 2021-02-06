@@ -98,12 +98,17 @@ bool FanRegulator::HasCurrentRestpoint()
   return CurrentRestpoint.PausedTicks > 0;
 }
 
-bool FanRegulator::DirectionChanged(uint8_t LastOutputValue, uint8_t nextOutputValue, Restpoint *activeRestpoint)
+void FanRegulator::DeleteCurrentRestpoint()
 {
-  if (nextOutputValue == LastOutputValue)
+  CurrentRestpoint.PausedTicks = 0;
+}
+
+bool FanRegulator::DirectionChanged(uint8_t lastOutputValue, uint8_t nextOutputValue, Restpoint *activeRestpoint)
+{
+  if (nextOutputValue == lastOutputValue)
     return false;
 
-  ValueChange newDirection = nextOutputValue > LastOutputValue ? ValueChange::Rising : ValueChange::Falling;
+  ValueChange newDirection = nextOutputValue > lastOutputValue ? ValueChange::Rising : ValueChange::Falling;
 
   return newDirection != activeRestpoint->Direction;
 }
@@ -115,7 +120,7 @@ uint8_t FanRegulator::Step(uint8_t targetValue, uint8_t currentValue)
 
   if (HasCurrentRestpoint() && DirectionChanged(LastOutputValue, nextOutputValue, &CurrentRestpoint))
   {
-    CurrentRestpoint.PausedTicks = 0;
+    DeleteCurrentRestpoint();
   }
 
 
@@ -143,7 +148,7 @@ uint8_t FanRegulator::Step(uint8_t targetValue, uint8_t currentValue)
 
     if (TickCounter == 0)
     {
-      CurrentRestpoint.PausedTicks = 0;
+      DeleteCurrentRestpoint();
 
       if (CurrentRestpoint.Direction == ValueChange::Rising && nextOutputValue < 255)
       {
