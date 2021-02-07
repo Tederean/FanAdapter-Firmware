@@ -1,9 +1,13 @@
 #include <Arduino.h>
 #include <vector>
 #include <framework/services/SystemService.h>
+
+#ifdef ENV_MICRO
 #include <application/services/FanPowerService.h>
 #include <application/services/FanRotationService.h>
 #include <application/services/PCService.h>
+#endif
+
 #include <application/services/TickService.h>
 #include <application/common/FanRegulator.h>
 
@@ -21,6 +25,10 @@ namespace Services
     const timespan_t TickInterval = 100UL * 1000UL;
 
     const float TickFrequency = 1000000.0f / TickInterval;
+
+#if defined(ENV_UNO) || defined(ENV_MICRO_SIM)
+    uint8_t OutputPower;
+#endif
 
     vector<Restpoint> Restpoints =
     {
@@ -41,7 +49,46 @@ namespace Services
     {
       TickEvent.Subscribe(OnTickEvent);
       Services::System::InvokeLater(&TickEvent, TickInterval, true);
+
+#ifdef ENV_UNO
+      pinMode(A0, INPUT);
+#endif
+
+#if defined(ENV_UNO) || defined(ENV_MICRO_SIM)
+    OutputPower = 0;
+#endif
     }
+
+#if defined(ENV_UNO)
+
+    void OnTickEvent(void *args)
+    {
+      uint8_t targetPower = (analogRead(A0) >> 2);
+
+      uint8_t currentPower = OutputPower;
+      uint8_t outputPower = Regulator.Step(targetPower, currentPower);
+
+      Debug(targetPower);
+      Debug('\t');
+      Debug(outputPower);
+      Debug('\n');
+
+      OutputPower = outputPower;
+    }
+
+#elif defined(ENV_MICRO_SIM)
+
+    void OnTickEvent(void *args)
+    {
+      uint8_t targetPower = 255;
+
+      uint8_t currentPower = OutputPower;
+      uint8_t outputPower = Regulator.Step(targetPower, currentPower);
+
+      OutputPower = outputPower;
+    }
+
+#elif defined(ENV_MICRO)
 
     void OnTickEvent(void *args)
     {
@@ -69,6 +116,7 @@ namespace Services
 
       Debug("\n");
     }
+#endif
 
   } // namespace Tick
 } // namespace Services

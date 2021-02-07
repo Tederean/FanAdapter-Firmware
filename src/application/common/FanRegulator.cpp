@@ -38,7 +38,8 @@ bool FanRegulator::TryFindNextRisingRestpoint(uint8_t lastOutputValue, uint8_t n
 
         if (difference < nextDifference)
         {
-          memcpy(&restpoint, foundRestpoint, sizeof(Restpoint));
+          foundRestpoint->PausedTicks = restpoint.PausedTicks;
+          foundRestpoint->Target = restpoint.Target;
           nextDifference = difference;
         }
       }
@@ -68,7 +69,8 @@ bool FanRegulator::TryFindNextFallingRestpoint(uint8_t lastOutputValue, uint8_t 
 
         if (difference < nextDifference)
         {
-          memcpy(&restpoint, foundRestpoint, sizeof(Restpoint));
+          foundRestpoint->PausedTicks = restpoint.PausedTicks;
+          foundRestpoint->Target = restpoint.Target;
           nextDifference = difference;
         }
       }
@@ -144,7 +146,7 @@ uint8_t FanRegulator::Step(uint8_t targetValue, uint8_t currentValue)
   {
     nextOutputValue = CurrentRestpoint.Target;
     TickCounter--;
-    PID.Clear();
+    //PID.Clear();
 
     if (TickCounter == 0)
     {
