@@ -48,8 +48,12 @@ private:
 
   void DeleteCurrentRestpoint();
 
-  bool DirectionChanged(uint8_t lastOutputValue, uint8_t nextOutputValue, Restpoint *activeRestpoint);
+  bool DirectionChanged(uint8_t lastValue, uint8_t nextValue, Restpoint *activeRestpoint);
 
+  void StepCurrentRestpoint(uint8_t targetValue, uint8_t currentValue);
+
+  void StepWithoutRestpoint(uint8_t targetValue, uint8_t currentValue);
+  
 public:
 
   FanRegulator(float proportionalValue, float integralValue, float differentialValue, float tickFrequency, uint8_t minValue, uint8_t maxValue, vector<Restpoint> *restpoints);

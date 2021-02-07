@@ -105,65 +105,67 @@ void FanRegulator::DeleteCurrentRestpoint()
   CurrentRestpoint.PausedTicks = 0;
 }
 
-bool FanRegulator::DirectionChanged(uint8_t lastOutputValue, uint8_t nextOutputValue, Restpoint *activeRestpoint)
+bool FanRegulator::DirectionChanged(uint8_t lastValue, uint8_t nextValue, Restpoint *activeRestpoint)
 {
-  if (nextOutputValue == lastOutputValue)
+  if (nextValue == lastValue)
     return false;
 
-  ValueChange newDirection = nextOutputValue > lastOutputValue ? ValueChange::Rising : ValueChange::Falling;
+  ValueChange newDirection = nextValue > lastValue ? ValueChange::Rising : ValueChange::Falling;
 
   return newDirection != activeRestpoint->Direction;
 }
 
 uint8_t FanRegulator::Step(uint8_t targetValue, uint8_t currentValue)
 {
-  uint8_t nextOutputValue = PID.Step(targetValue, currentValue);
-
-
-  if (HasCurrentRestpoint() && DirectionChanged(LastOutputValue, nextOutputValue, &CurrentRestpoint))
+  if (HasCurrentRestpoint() && DirectionChanged(LastOutputValue, targetValue, &CurrentRestpoint))
   {
     DeleteCurrentRestpoint();
   }
 
-
-  if (!HasCurrentRestpoint())
-  {
-    Restpoint nextRestpoint;
-
-    if (TryFindNextRestpoint(LastOutputValue, nextOutputValue, AvailableRestpoints, &nextRestpoint))
-    {
-      CurrentRestpoint = nextRestpoint;
-
-      TickCounter = nextRestpoint.PausedTicks;
-      LastOutputValue = nextRestpoint.Target;
-
-      return nextRestpoint.Target;
-    }
-  }
-
-
   if (HasCurrentRestpoint())
   {
-    nextOutputValue = CurrentRestpoint.Target;
-    TickCounter--;
-    //PID.Clear();
-
-    if (TickCounter == 0)
-    {
-      DeleteCurrentRestpoint();
-
-      if (CurrentRestpoint.Direction == ValueChange::Rising && nextOutputValue < 255)
-      {
-        nextOutputValue++;
-      }
-      else if (CurrentRestpoint.Direction == ValueChange::Falling && nextOutputValue > 0)
-      {
-        nextOutputValue--;
-      }
-    }
+    StepCurrentRestpoint(targetValue, currentValue);
+  }
+  else
+  {
+    StepWithoutRestpoint(targetValue, currentValue);
   }
 
+  return LastOutputValue;
+}
 
-  LastOutputValue = nextOutputValue;
-  return nextOutputValue;
+void FanRegulator::StepCurrentRestpoint(uint8_t targetValue, uint8_t currentValue)
+{
+  TickCounter--;
+
+  if (TickCounter > 0) return;
+
+  DeleteCurrentRestpoint();
+
+  if (CurrentRestpoint.Direction == ValueChange::Rising && LastOutputValue < 255)
+  {
+    LastOutputValue++;
+  }
+  else if (CurrentRestpoint.Direction == ValueChange::Falling && LastOutputValue > 0)
+  {
+    LastOutputValue--;
+  }
+}
+
+void FanRegulator::StepWithoutRestpoint(uint8_t targetValue, uint8_t currentValue)
+{
+  uint8_t nextOutputValue = PID.Step(targetValue, currentValue);
+  Restpoint nextRestpoint;
+
+  if (TryFindNextRestpoint(LastOutputValue, nextOutputValue, AvailableRestpoints, &nextRestpoint))
+  {
+    CurrentRestpoint = nextRestpoint;
+
+    TickCounter = nextRestpoint.PausedTicks;
+    LastOutputValue = nextRestpoint.Target;
+  }
+  else
+  {
+    LastOutputValue = nextOutputValue;
+  }
 }
