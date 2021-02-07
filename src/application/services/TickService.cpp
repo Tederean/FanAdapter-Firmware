@@ -32,16 +32,13 @@ namespace Services
 
     vector<Restpoint> Restpoints =
     {
-      { 10, 3000000/TickInterval, ValueChange::Rising },
-      { 100, 3000000/TickInterval, ValueChange::Rising },
-      { 200, 3000000/TickInterval, ValueChange::Rising },
+      { 48, 5000000/TickInterval, ValueChange::Rising },
+      { 127, 30000000/TickInterval, ValueChange::Rising },
 
-      { 10, 3000000/TickInterval, ValueChange::Falling },
-      { 100, 3000000/TickInterval, ValueChange::Falling },
-      { 200, 3000000/TickInterval, ValueChange::Falling },
+      { 52, 15000000/TickInterval, ValueChange::Falling },
     };
 
-    FanRegulator Regulator(0.0f, 0.1f, 0.0f, TickFrequency, 0, 255, &Restpoints);
+    FanRegulator Regulator(0.0f, 0.1f, 0.0f, TickFrequency, 40, 178, &Restpoints);
 
     Event<void> TickEvent;
 
