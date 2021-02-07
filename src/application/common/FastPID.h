@@ -50,7 +50,7 @@ private:
   int64_t Outmax, Outmin; 
   
   // State
-  int16_t LastSetpoint, LastOut;
+  int16_t LastSetpoint;
   int64_t Sum;
   int32_t LastError;
 };

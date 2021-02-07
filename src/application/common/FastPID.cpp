@@ -7,7 +7,6 @@ FastPID::~FastPID() {
 
 void FastPID::Clear() {
   LastSetpoint = 0; 
-  LastOut = 0;
   Sum = 0; 
   LastError = 0;
 }
