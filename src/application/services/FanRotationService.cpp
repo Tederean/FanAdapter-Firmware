@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <util/atomic.h>
 #include <application/services/FanRotationService.h>
 #include <framework/services/SystemService.h>
 
@@ -44,14 +43,15 @@ namespace Services
       timespan_t copyOfCurrentEdge;
       timespan_t copyOfLastEdge;
 
-      ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-      {
-        copyOfCurrentEdge = CurrentEdge;
-        copyOfLastEdge = LastEdge;
+      noInterrupts();
 
-        CurrentEdge = 0;
-        LastEdge = 0;
-      }
+      copyOfCurrentEdge = CurrentEdge;
+      copyOfLastEdge = LastEdge;
+
+      CurrentEdge = 0;
+      LastEdge = 0;
+
+      interrupts();
 
       timespan_t periodDuration = abs(copyOfCurrentEdge - copyOfLastEdge);
 

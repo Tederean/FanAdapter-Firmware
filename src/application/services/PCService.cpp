@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <util/atomic.h>
 #include <application/services/PCService.h>
 #include <framework/services/SystemService.h>
 #include <framework/utils/Math.h>
@@ -26,19 +25,21 @@ namespace Services
     {
       uint32_t highTime_us = 0;
 
-      ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-      {
-        highTime_us = pulseIn(PC_PWM, HIGH, MeasurementTimeout);
-      }
+      noInterrupts();
+
+      highTime_us = pulseIn(PC_PWM, HIGH, MeasurementTimeout);
+
+      interrupts();
 
       if (highTime_us > 0)
       {
         uint32_t lowTime_us = 0;
         
-        ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-        {
-          lowTime_us = pulseIn(PC_PWM, LOW, MeasurementTimeout);
-        }
+        noInterrupts();
+
+        lowTime_us = pulseIn(PC_PWM, LOW, MeasurementTimeout);
+
+        interrupts();
 
         if (lowTime_us > 0)
         {

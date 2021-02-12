@@ -1,4 +1,11 @@
 #include <Arduino.h>
+
+#if defined(__SAM3X8E__) || defined(__SAMD21G18A__)
+#undef min
+#undef max
+#include <algorithm>
+#endif
+
 #include <vector>
 #include <framework/services/SystemService.h>
 
