@@ -26,7 +26,7 @@ namespace Services
 
     const float TickFrequency = 1000000.0f / TickInterval;
 
-#if defined(ENV_UNO) || defined(ENV_MICRO_SIM)
+#ifdef ENV_DUE
     uint8_t OutputPower;
 #endif
 
@@ -47,16 +47,13 @@ namespace Services
       TickEvent.Subscribe(OnTickEvent);
       Services::System::InvokeLater(&TickEvent, TickInterval, true);
 
-#ifdef ENV_UNO
+#ifdef ENV_DUE
       pinMode(A0, INPUT);
-#endif
-
-#if defined(ENV_UNO) || defined(ENV_MICRO_SIM)
-    OutputPower = 0;
+      OutputPower = 0;
 #endif
     }
 
-#if defined(ENV_UNO)
+#ifdef ENV_DUE
 
     void OnTickEvent(void *args)
     {
@@ -69,18 +66,6 @@ namespace Services
       Debug('\t');
       Debug(outputPower);
       Debug('\n');
-
-      OutputPower = outputPower;
-    }
-
-#elif defined(ENV_MICRO_SIM)
-
-    void OnTickEvent(void *args)
-    {
-      uint8_t targetPower = 255;
-
-      uint8_t currentPower = OutputPower;
-      uint8_t outputPower = Regulator.Step(targetPower, currentPower);
 
       OutputPower = outputPower;
     }
