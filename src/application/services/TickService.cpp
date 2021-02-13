@@ -52,7 +52,7 @@ namespace Services
     void Initialize()
     {
       TickEvent.Subscribe(OnTickEvent);
-      Services::System::InvokeLater(&TickEvent, TickInterval, true);
+      Services::System::InvokeLater(&TickEvent, TickInterval, TimerMode::RepeatingSync);
 
 #ifdef ENV_DUE
       pinMode(A0, INPUT);
