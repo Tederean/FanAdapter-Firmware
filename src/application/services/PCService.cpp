@@ -18,11 +18,18 @@ namespace Services
 
     void Initialize()
     {
+#ifdef PC_SIMULATION
+      analogReadResolution(8);
+#endif
+
       pinMode(PC_PWM, INPUT);
     }
 
     uint8_t MeasureTargetPower()
     {
+#ifdef PC_SIMULATION
+      return analogRead(PC_PWM);
+#else
       uint32_t highTime_us = 0;
 
       noInterrupts();
@@ -50,6 +57,7 @@ namespace Services
       }
 
       return digitalRead(PC_PWM) == HIGH ? 0xFF : 0x00;
+#endif
     }
 
   } // namespace PC

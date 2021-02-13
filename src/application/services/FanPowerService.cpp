@@ -21,8 +21,8 @@ namespace Services
       pinMode(FAN_PWM, OUTPUT);
       pinMode(FAN_VCC, OUTPUT);
 
-#if defined(ENV_MICRO) && ((FAN_PWM == 9) || (FAN_PWM == 10))
-      TCCR1B = TCCR1B & B11111000 | B00000001; // Adjust PWM frequency, affects pin 9 and 10.
+#if defined(__AVR_ATmega32U4__) && ((FAN_PWM == 9) || (FAN_PWM == 10))
+      TCCR1B = (TCCR1B & B11111000) | B00000001; // Adjust PWM frequency, affects pin 9 and 10.
 #endif
 
       SetFanPower(0xFF);

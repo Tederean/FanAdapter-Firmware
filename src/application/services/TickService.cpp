@@ -8,13 +8,9 @@
 
 #include <vector>
 #include <framework/services/SystemService.h>
-
-#ifdef ENV_MICRO
 #include <application/services/FanPowerService.h>
 #include <application/services/FanRotationService.h>
 #include <application/services/PCService.h>
-#endif
-
 #include <application/services/TickService.h>
 #include <application/common/FanRegulator.h>
 
@@ -33,9 +29,6 @@ namespace Services
 
     const float TickFrequency = 1000000.0f / TickInterval;
 
-#ifdef ENV_DUE
-    uint8_t OutputPower;
-#endif
 
     vector<Restpoint> Restpoints =
     {
@@ -53,35 +46,13 @@ namespace Services
     {
       TickEvent.Subscribe(OnTickEvent);
       Services::System::InvokeLater(&TickEvent, TickInterval, TimerMode::RepeatingSync);
-
-#ifdef ENV_DUE
-      pinMode(A0, INPUT);
-      OutputPower = 0;
-#endif
     }
-
-#ifdef ENV_DUE
 
     void OnTickEvent(void *args)
     {
-      uint8_t targetPower = (analogRead(A0) >> 2);
-
-      uint8_t currentPower = OutputPower;
-      uint8_t outputPower = Regulator.Step(targetPower, currentPower);
-
-      Debug(targetPower);
-      Debug('\t');
-      Debug(outputPower);
-      Debug('\n');
-
-      OutputPower = outputPower;
-    }
-
-#elif defined(ENV_MICRO)
-
-    void OnTickEvent(void *args)
-    {
+#ifndef PC_SIMULATION
       uint16_t currentRPM = Services::FanRotation::MeasureRPM();
+#endif
       uint8_t targetPower = Services::PC::MeasureTargetPower();
 
       uint8_t currentPower = Services::FanPower::GetFanPower();
@@ -90,10 +61,12 @@ namespace Services
       Services::FanPower::SetFanPower(outputPower);
 
 
+#ifndef PC_SIMULATION
       Debug("RPM=");
       Debug(currentRPM);
 
       Debug(" | ");
+#endif
 
       Debug("target=");
       Debug(targetPower);
@@ -105,7 +78,6 @@ namespace Services
 
       Debug("\n");
     }
-#endif
 
   } // namespace Tick
 } // namespace Services
