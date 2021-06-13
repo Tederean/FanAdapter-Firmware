@@ -45,7 +45,7 @@ namespace Services
     void Initialize()
     {
       TickEvent.Subscribe(OnTickEvent);
-      Services::System::InvokeLater(&TickEvent, TickInterval, TimerMode::RepeatingSync);
+      Services::System::InvokeLater(&TickEvent, TickInterval, SchedulingBehaviour::FixedPeriodSkipTicks);
     }
 
     void OnTickEvent(void *args)
